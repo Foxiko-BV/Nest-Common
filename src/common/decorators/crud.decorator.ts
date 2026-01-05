@@ -170,8 +170,8 @@ export function Crud<T extends AnyEntity, C = EntityData<T>, U = EntityData<T>>(
           items: { $ref: getSchemaPath(options.entity) },
         }
       })
-      @ApiQuery({ name: 'page', type: 'number', required: false })
-      @ApiQuery({ name: 'limit', type: 'number', required: false })
+      @ApiQuery({ name: 'page', type: 'number', required: false, description: 'The page number, starting from 0' })
+      @ApiQuery({ name: 'limit', type: 'number', required: false, description: 'The number of items per page' })
       async query(
         @Req() req: Request,
         @Param() params: any,
