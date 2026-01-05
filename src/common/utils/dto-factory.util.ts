@@ -161,7 +161,11 @@ export class DtoFactory {
                         if (prop.enum) {
                             // prop.items might have enum values
                             if (prop.items) {
-                                IsEnum(prop.items, props)(DefaultCreateDto.prototype, prop.name);
+                                let items = prop.items;
+                                if (typeof items === 'function') {
+                                    items = (items as any)();
+                                }
+                                IsEnum(items, props)(DefaultCreateDto.prototype, prop.name);
                             }
                         }
 
@@ -171,16 +175,30 @@ export class DtoFactory {
 
                         if (prop.nullable) {
                             IsOptional(props)(DefaultCreateDto.prototype, prop.name);
-                            const apiOptions: any = { type: typeToCheck, enum: prop.items, isArray };
-                            if (prop.enum && typeof prop.type === 'string') {
-                                apiOptions.enumName = prop.type;
+                            const apiOptions: any = { type: typeToCheck, isArray };
+                            if (prop.enum && prop.items) {
+                                let items = prop.items;
+                                if (typeof items === 'function') {
+                                    items = (items as any)();
+                                }
+                                apiOptions.enum = items;
+                                if (typeof prop.type === 'string' && !['string', 'number', 'boolean', 'date', 'array', 'object'].includes(prop.type.toLowerCase())) {
+                                    apiOptions.enumName = prop.type;
+                                }
                             }
                             ApiPropertyOptional(apiOptions)(DefaultCreateDto.prototype, prop.name);
                         } else {
                             IsNotEmpty(props)(DefaultCreateDto.prototype, prop.name);
-                            const apiOptions: any = { type: typeToCheck, enum: prop.items, isArray };
-                            if (prop.enum && typeof prop.type === 'string') {
-                                apiOptions.enumName = prop.type;
+                            const apiOptions: any = { type: typeToCheck, isArray };
+                            if (prop.enum && prop.items) {
+                                let items = prop.items;
+                                if (typeof items === 'function') {
+                                    items = (items as any)();
+                                }
+                                apiOptions.enum = items;
+                                if (typeof prop.type === 'string' && !['string', 'number', 'boolean', 'date', 'array', 'object'].includes(prop.type.toLowerCase())) {
+                                    apiOptions.enumName = prop.type;
+                                }
                             }
                             ApiProperty(apiOptions)(DefaultCreateDto.prototype, prop.name);
                         }

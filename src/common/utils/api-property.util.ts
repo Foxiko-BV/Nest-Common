@@ -121,7 +121,10 @@ export class ApiPropertyUtil {
 
                         if (prop?.enum) {
                             options.enum = prop.items;
-                            if (typeof prop.type === 'string') {
+                            if (typeof prop.items === 'function') {
+                                options.enum = prop.items();
+                            }
+                            if (typeof prop.type === 'string' && !['string', 'number', 'boolean', 'date', 'array', 'object'].includes(prop.type.toLowerCase())) {
                                 (options as any).enumName = prop.type;
                             }
                         }
