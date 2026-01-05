@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "removeComments": true,
+    "noLib": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "target": "es2018",
+    "sourceMap": true,
+    "allowJs": false,
+    "skipLibCheck": true,
+    "composite": true,
+    "baseUrl": "./",
+    "rootDir": "./src",
+    "outDir": "./build",
+    "paths": {
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

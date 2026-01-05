@@ -1,0 +1,43 @@
+name: Publish to NPM
+
+permissions:
+  id-token: write  # Required for OIDC npm
+  contents: write
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install latest npm
+        run: npm install -g npm@latest
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Set version from release tag
+        run: |
+          # Strip 'v' prefix if present
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "Setting version to $VERSION"
+          npm version $VERSION --no-git-tag-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to NPM
+        run: npm publish --provenance --access public
+
