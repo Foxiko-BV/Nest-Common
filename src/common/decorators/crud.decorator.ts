@@ -48,13 +48,32 @@ export function Crud<T extends AnyEntity, C = EntityData<T>, U = EntityData<T>>(
   DtoFactory.createDtos(options);
   ApiPropertyUtil.createApiEntity(options.entity);
 
-  let primaryKey = options.primaryKey || 'id';
+  let primaryKey = options.primaryKey;
   let primaryKeyType: any = String;
+
+  const { defaultMetadataStorage } = require('class-transformer/cjs/storage');
+  const exposedMetadatas = defaultMetadataStorage.getExposedMetadatas(options.entity);
+
+  if (!primaryKey && exposedMetadatas) {
+    const exposedAsId = exposedMetadatas.find((m: any) => m.options && m.options.name === 'id');
+    if (exposedAsId) {
+      primaryKey = exposedAsId.propertyName;
+    } else {
+      const idProp = exposedMetadatas.find((m: any) => m.propertyName === 'id');
+      if (idProp) {
+        primaryKey = 'id';
+      }
+    }
+  }
 
   const meta = MetadataStorage.getMetadataFromDecorator(options.entity);
 
-  if (!options.primaryKey && meta && meta.primaryKeys && meta.primaryKeys.length > 0) {
+  if (!primaryKey && meta && meta.primaryKeys && meta.primaryKeys.length > 0) {
     primaryKey = meta.primaryKeys[0];
+  }
+
+  if (!primaryKey) {
+    throw new Error('Primary key not found');
   }
 
   if (meta) {
