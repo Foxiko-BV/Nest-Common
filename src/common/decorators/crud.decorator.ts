@@ -48,13 +48,16 @@ export function Crud<T extends AnyEntity, C = EntityData<T>, U = EntityData<T>>(
   DtoFactory.createDtos(options);
   ApiPropertyUtil.createApiEntity(options.entity);
 
-  let primaryKey = 'id';
+  let primaryKey = options.primaryKey || 'id';
   let primaryKeyType: any = String;
 
   const meta = MetadataStorage.getMetadataFromDecorator(options.entity);
 
-  if (meta && meta.primaryKeys && meta.primaryKeys.length > 0) {
+  if (!options.primaryKey && meta && meta.primaryKeys && meta.primaryKeys.length > 0) {
     primaryKey = meta.primaryKeys[0];
+  }
+
+  if (meta) {
     const prop = meta.properties[primaryKey];
     if (prop) {
       // Try to guess type from prop.type or design:type

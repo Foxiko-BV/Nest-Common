@@ -4,6 +4,7 @@ import { Request } from '@nestjs/common';
 
 export interface CrudOptions<T, C = EntityData<T>, U = EntityData<T>> {
   tag?: string;
+  primaryKey?: string;
   entity: Type<T>;
   createDto?: Type<C>;
   updateDto?: Type<U>;
