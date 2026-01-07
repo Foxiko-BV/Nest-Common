@@ -34,11 +34,35 @@ export class CrudEntityInterceptor implements NestInterceptor {
     const params = req.params;
 
     // Discover Primary Key
+    let primaryKey = options.primaryKey;
+
+    const { defaultMetadataStorage } = require('class-transformer/cjs/storage');
+    const exposedMetadatas = defaultMetadataStorage.getExposedMetadatas(options.entity);
+
+    if (!primaryKey && exposedMetadatas) {
+      const exposedAsId = exposedMetadatas.find((m: any) => m.options && m.options.name === 'id');
+      if (exposedAsId) {
+        primaryKey = exposedAsId.propertyName;
+      } else {
+        const idProp = exposedMetadatas.find((m: any) => m.propertyName === 'id');
+        if (idProp) {
+          primaryKey = 'id';
+        }
+      }
+    }
+
     const metadata = this.em.getMetadata().get(options.entity.name);
-    const primaryKey = metadata?.primaryKeys[0] || 'id';
+
+    if (!primaryKey && metadata && metadata.primaryKeys && metadata.primaryKeys.length > 0) {
+      primaryKey = metadata.primaryKeys[0];
+    }
+
+    if (!primaryKey) {
+      primaryKey = 'id';
+    }
 
     // Check if ID is in params
-    const idValue = params[primaryKey];
+    const idValue = params['id'];
 
     if (!idValue) {
       // No ID found in params, skip fetching
