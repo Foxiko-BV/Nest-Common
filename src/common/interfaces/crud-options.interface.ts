@@ -24,6 +24,9 @@ export interface CrudOptions<T, C = EntityData<T>, U = EntityData<T>> {
         field: string;
         order: 'ASC' | 'DESC';
       }[];
+      filter?: {
+        [key: string]: boolean | ((value: any) => FilterQuery<T>);
+      };
     } | false,
     read?: {
     } | false,

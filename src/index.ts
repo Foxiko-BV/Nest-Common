@@ -5,6 +5,7 @@ export * from './common/decorators/inject-entity.decorator';
 export * from './common/base.service';
 export * from './common/dto/pagination.dto';
 export * from './common/utils/entity-name.util';
+export * from './common/utils/query-filter.util';
 export * from './common/base.event';
 export * from './common/base-related.service';
 export * from './common/constants';

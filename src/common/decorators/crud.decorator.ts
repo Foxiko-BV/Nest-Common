@@ -12,6 +12,7 @@ import { ApiBadRequestResponse, ApiBody, ApiExtraModels, ApiInternalServerErrorR
 import { PaginationDto } from '../dto/pagination.dto';
 import { CrudOptions } from '../interfaces/crud-options.interface';
 import { DtoFactory } from '../utils/dto-factory.util';
+import { QueryFilterUtil } from '../utils/query-filter.util';
 
 export interface ICrudController<T extends AnyEntity> {
   readonly service: BaseService<T>;
@@ -201,7 +202,13 @@ export function Crud<T extends AnyEntity, C = EntityData<T>, U = EntityData<T>>(
         @Query('limit') limit?: number,
       ) {
         const self = this as unknown as ICrudController<T>;
-        const filter = await options?.filter?.(req, params);
+        const userFilter = await options?.filter?.(req, params);
+        
+        const parsedFilter = options.operations?.query && typeof options.operations.query === 'object' && options.operations.query.filter
+          ? QueryFilterUtil.parseQueryFilters((req as any).query, options.operations.query.filter, options.entity)
+          : {};
+
+        const filter = { ...parsedFilter, ...(userFilter ?? {}) };
 
         const queryOptions = options.operations?.query;
         const sort = typeof queryOptions === 'object' ? queryOptions?.sort : undefined;
@@ -265,7 +272,12 @@ export function Crud<T extends AnyEntity, C = EntityData<T>, U = EntityData<T>>(
         @Res({ passthrough: true }) res: ExpressResponse,
       ) {
         const self = this as unknown as ICrudController<T>;
-        const filter = options?.filter?.(nestReq, params) ?? {};
+        const userFilter = options?.filter?.(nestReq, params) ?? {};
+        const parsedFilter = options.operations?.query && typeof options.operations.query === 'object' && options.operations.query.filter
+          ? QueryFilterUtil.parseQueryFilters((nestReq as any).query, options.operations.query.filter, options.entity)
+          : {};
+
+        const filter = { ...parsedFilter, ...userFilter };
         const isCsv = req.headers['accept'] === 'text/csv';
 
         const batchSize = 500;
@@ -467,6 +479,28 @@ export function Crud<T extends AnyEntity, C = EntityData<T>, U = EntityData<T>>(
         if (descriptor) {
           apiParamDecorator(CrudHost.prototype, method, descriptor);
           Object.defineProperty(CrudHost.prototype, method, descriptor);
+        }
+      }
+    }
+
+    // -- API QUERY INJECTION FOR FILTERS --
+    if (options.operations?.query && typeof options.operations.query === 'object' && options.operations.query.filter) {
+      const filterParams = QueryFilterUtil.getSwaggerQueryParams(options.entity, options.operations.query.filter);
+      for (const param of filterParams) {
+        const apiQueryDecorator = ApiQuery(param);
+        
+        // Apply to query method
+        const queryDescriptor = Object.getOwnPropertyDescriptor(CrudHost.prototype, 'query');
+        if (queryDescriptor) {
+          apiQueryDecorator(CrudHost.prototype, 'query', queryDescriptor);
+          Object.defineProperty(CrudHost.prototype, 'query', queryDescriptor);
+        }
+
+        // Apply to export method
+        const exportDescriptor = Object.getOwnPropertyDescriptor(CrudHost.prototype, 'export');
+        if (exportDescriptor) {
+          apiQueryDecorator(CrudHost.prototype, 'export', exportDescriptor);
+          Object.defineProperty(CrudHost.prototype, 'export', exportDescriptor);
         }
       }
     }
